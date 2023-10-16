@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évite les météorites</title>
+</head>
+<body>
+
+    <script src="https://unpkg.com/pixi.js@7.x/dist/pixi.min.js"></script>
+
+    <script>
+        let gameRunning = true;
+        const app = new PIXI.Application({ width: 800, height: 600, backgroundColor: 0x000000 });
+        document.body.appendChild(app.view);
+
+        const center = { x: app.view.width / 2, y: app.view.height / 2 };
+        const planetRadius = 50;
+
+        const sun = new PIXI.Graphics();
+        sun.beginFill(0xFFFF00);
+        sun.drawCircle(center.x, center.y, planetRadius);
+        sun.endFill();
+        app.stage.addChild(sun);
+
+        let angle = 0;
+        const distance = 150;
+        let angularVelocity = 0.02;  
+
+        const planet = new PIXI.Graphics();
+        planet.beginFill(0x0000FF);
+        planet.drawCircle(0, 0, planetRadius);
+        planet.endFill();
+        planet.x = center.x + distance;
+        planet.y = center.y;
+        app.stage.addChild(planet);
+
+        function movePlanet() {
+            angle += angularVelocity;
+            planet.x = center.x + distance * Math.cos(angle);
+            planet.y = center.y + distance * Math.sin(angle);
+        }
+
+        function spawnMeteorite() {
+            const meteoriteRadius = Math.random() * 20 + 10;
+            const meteorite = new PIXI.Graphics();
+            meteorite.radius = meteoriteRadius;
+            meteorite.beginFill(0xFF0000);
+            meteorite.drawCircle(0, 0, meteoriteRadius);
+            meteorite.endFill();
+
+            const spawnEdge = Math.random() * app.view.width;
+            meteorite.x = spawnEdge;
+            meteorite.y = (spawnEdge > app.view.width / 2) ? -20 : app.view.height + 20;
+
+            const targetX = center.x;
+            const targetY = center.y;
+
+            const velocity = {
+                x: targetX - meteorite.x * Math.random() * 10 ,
+                y: targetY - meteorite.y * Math.random() * 20,
+            };
+
+            const norm = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            velocity.x /= norm;
+            velocity.y /= norm;
+
+            meteorite.velocity = velocity;
+            app.stage.addChild(meteorite);
+        }
+
+        function checkCollision(circle1, circle2) {
+            const dx = circle1.x - circle2.x;
+            const dy = circle1.y - circle2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < (circle1.radius + circle2.radius);
+        }
+
+        function moveMeteorites() {
+            for (let i = app.stage.children.length - 1; i >= 0; i--) {
+                const meteorite = app.stage.children[i];
+                if (meteorite.velocity) {
+                    meteorite.x += meteorite.velocity.x * 2;
+                    meteorite.y += meteorite.velocity.y * 2;
+
+                    if (meteorite.x < -50 || meteorite.x > app.view.width + 50 || meteorite.y < -50 || meteorite.y > app.view.height + 50) {
+                        app.stage.removeChild(meteorite);
+                    }
+                    if (checkCollision({ x: planet.x, y: planet.y, radius: planetRadius }, meteorite)) {
+                        gameRunning = false;
+                        app.ticker.stop();
+                        alert("Game Over! La planète a été touchée par une météorite!");
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                angularVelocity += 0.01;  
+            } else if (event.key === 'ArrowLeft') {
+                angularVelocity -= 0.01;  
+            }
+        });
+
+        app.ticker.add(() => {
+            if (gameRunning) {
+                movePlanet();
+                moveMeteorites();
+            }
+        });
+
+        window.addEventListener("click", () => {
+            if (!gameRunning) {
+                
+                location.reload();
+            }
+        });
+
+        setInterval(spawnMeteorite, 2000);
+    </script>
+</body>
+</html>
