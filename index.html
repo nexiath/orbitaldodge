@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Évite les météorites</title> 
+    <title>Évite les météorites</title>
 </head>
+
 <body>
 
     <script src="https://unpkg.com/pixi.js@7.x/dist/pixi.min.js"></script>
 
     <script>
         let gameRunning = true;
-        const app = new PIXI.Application({ width: 800, height: 600, backgroundColor: 0x000000 });
+        const app = new PIXI.Application({ width: window.innerWidth, height: window.innerHeight, backgroundColor: 0x000000 });
         document.body.appendChild(app.view);
 
         const center = { x: app.view.width / 2, y: app.view.height / 2 };
-        const planetRadius = 50;
+        const planetRadius = 20;
 
         const sun = new PIXI.Graphics();
         sun.beginFill(0xFFFF00);
@@ -25,7 +27,7 @@
 
         let angle = 0;
         const distance = 150;
-        let angularVelocity = 0.02;  
+        let angularVelocity = 0.02;
 
         const planet = new PIXI.Graphics();
         planet.beginFill(0x0000FF);
@@ -34,6 +36,14 @@
         planet.x = center.x + distance;
         planet.y = center.y;
         app.stage.addChild(planet);
+
+        window.addEventListener('resize', () => {
+            app.renderer.resize(window.innerWidth, window.innerHeight);
+            center.x = app.view.width / 2;
+            center.y = app.view.height / 2;
+            sun.x = center.x;
+            sun.y = center.y;
+        });
 
         function movePlanet() {
             angle += angularVelocity;
@@ -49,16 +59,34 @@
             meteorite.drawCircle(0, 0, meteoriteRadius);
             meteorite.endFill();
 
-            const spawnEdge = Math.random() * app.view.width;
-            meteorite.x = spawnEdge;
-            meteorite.y = (spawnEdge > app.view.width / 2) ? -20 : app.view.height + 20;
+            let side = Math.floor(Math.random() * 4);
+
+            switch (side) {
+                case 0:
+                    meteorite.x = Math.random() * app.view.width;
+                    meteorite.y = -meteoriteRadius;
+                    break;
+                case 1:
+                    meteorite.x = app.view.width + meteoriteRadius;
+                    meteorite.y = Math.random() * app.view.height;
+                    break;
+                case 2:
+                    meteorite.x = Math.random() * app.view.width;
+                    meteorite.y = app.view.height + meteoriteRadius;
+                    break;
+                case 3:
+                    meteorite.x = -meteoriteRadius;
+                    meteorite.y = Math.random() * app.view.height;
+                    break;
+            }
+
 
             const targetX = center.x;
             const targetY = center.y;
 
             const velocity = {
-                x: targetX - meteorite.x * Math.random() * 10 ,
-                y: targetY - meteorite.y * Math.random() * 20,
+                x: targetX - meteorite.x,
+                y: targetY - meteorite.y,
             };
 
             const norm = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
@@ -68,6 +96,7 @@
             meteorite.velocity = velocity;
             app.stage.addChild(meteorite);
         }
+
 
         function checkCollision(circle1, circle2) {
             const dx = circle1.x - circle2.x;
@@ -97,9 +126,9 @@
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'ArrowRight') {
-                angularVelocity += 0.01;  
+                angularVelocity += 0.01;
             } else if (event.key === 'ArrowLeft') {
-                angularVelocity -= 0.01;  
+                angularVelocity -= 0.01;
             }
         });
 
@@ -112,12 +141,26 @@
 
         window.addEventListener("click", () => {
             if (!gameRunning) {
-                
+
                 location.reload();
             }
         });
 
-        setInterval(spawnMeteorite, 2000);
+        setInterval(spawnMeteorite, 300);
     </script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+
 </body>
+
 </html>
