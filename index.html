@@ -5,37 +5,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Évite les météorites</title>
+    <link rel="icon" href="src/images/meteorite.ico" />
 </head>
 
 <body>
+    <button id="startBtn">Start Game</button>
+    <div id="timer">00:00</div>
 
     <script src="https://unpkg.com/pixi.js@7.x/dist/pixi.min.js"></script>
 
+    <audio id="backgroundMusic" loop>
+        <source src="src/images/back.mp3" type="audio/mp3">
+    </audio>
+
     <script>
-        let gameRunning = true;
-        const app = new PIXI.Application({ width: window.innerWidth, height: window.innerHeight, backgroundColor: 0x000000 });
+        let app = new PIXI.Application({ width: window.innerWidth, height: window.innerHeight, backgroundColor: 0x000000 });
         document.body.appendChild(app.view);
 
         const center = { x: app.view.width / 2, y: app.view.height / 2 };
         const planetRadius = 20;
+
+        let gameRunning = true;
+        const music = document.getElementById("backgroundMusic");
+        music.play();
+
+        const timerElement = document.getElementById("timer")
+        let temps = 0;
+        timerElement.innerText = temps++;
+
+        const startBtn = document.getElementById("startBtn");
+        startBtn.addEventListener('click', function () {
+            music.play();
+            startBtn.style.display = 'none';
+        });
+
+        const planet = new PIXI.Graphics();
+        planet.beginFill(0x0000FF);
+        planet.drawCircle(0, 0, planetRadius);
+        planet.endFill();
+        planet.x = center.x + 150;
+        planet.y = center.y;
+        app.stage.addChild(planet);
+
+        let angle = 0;
+        const distance = 150;
+        let angularVelocity = 0.02;
+
+        function movePlanet() {
+            angle += angularVelocity;
+            planet.x = center.x + distance * Math.cos(angle);
+            planet.y = center.y + distance * Math.sin(angle);
+        }
 
         const sun = new PIXI.Graphics();
         sun.beginFill(0xFFFF00);
         sun.drawCircle(center.x, center.y, planetRadius);
         sun.endFill();
         app.stage.addChild(sun);
-
-        let angle = 0;
-        const distance = 150;
-        let angularVelocity = 0.02;
-
-        const planet = new PIXI.Graphics();
-        planet.beginFill(0x0000FF);
-        planet.drawCircle(0, 0, planetRadius);
-        planet.endFill();
-        planet.x = center.x + distance;
-        planet.y = center.y;
-        app.stage.addChild(planet);
 
         window.addEventListener('resize', () => {
             app.renderer.resize(window.innerWidth, window.innerHeight);
@@ -44,12 +70,6 @@
             sun.x = center.x;
             sun.y = center.y;
         });
-
-        function movePlanet() {
-            angle += angularVelocity;
-            planet.x = center.x + distance * Math.cos(angle);
-            planet.y = center.y + distance * Math.sin(angle);
-        }
 
         function spawnMeteorite() {
             const meteoriteRadius = Math.random() * 20 + 10;
@@ -80,7 +100,6 @@
                     break;
             }
 
-
             const targetX = center.x;
             const targetY = center.y;
 
@@ -96,7 +115,6 @@
             meteorite.velocity = velocity;
             app.stage.addChild(meteorite);
         }
-
 
         function checkCollision(circle1, circle2) {
             const dx = circle1.x - circle2.x;
@@ -141,7 +159,6 @@
 
         window.addEventListener("click", () => {
             if (!gameRunning) {
-
                 location.reload();
             }
         });
